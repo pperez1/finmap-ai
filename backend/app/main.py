@@ -1,0 +1,19 @@
+from fastapi import FastAPI
+
+from app.api.routes_flags import router as flags_router
+from app.api.routes_billing import router as billing_router
+from app.api.routes_ai_eval import router as ai_router
+from app.api.routes_compliance_export import router as compliance_router
+from app.api.routes_mapping import router as mapping_router
+
+app = FastAPI()
+
+app.include_router(flags_router)
+app.include_router(billing_router)
+app.include_router(ai_router)
+app.include_router(compliance_router)
+app.include_router(mapping_router)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
