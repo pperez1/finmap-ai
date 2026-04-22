@@ -1,25 +1,34 @@
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, File
 import pandas as pd
 from app.services.mapping_service import hybrid_map
+import traceback
 
 router = APIRouter()
 
+
 @router.post("/process")
-async def process(file: UploadFile):
-    df = pd.read_excel(file.file)
+async def process(file: UploadFile = File(...)):
+    try:
+        df = pd.read_excel(file.file)
+        columns = df.columns.tolist()
 
-    columns = df.columns.tolist()
-    mapping = hybrid_map(columns)
+        result = hybrid_map(columns)
 
-    required = ["Revenue", "OperatingCost", "DSCR"]
+        return {
+            "status": "success",
+            "columns": columns,
+            **result
+        }
 
-    missing = [f for f in required if f not in mapping]
+    except Exception as e:
+        print("PROCESS ERROR:", str(e))
+        print(traceback.format_exc())
 
-    unmapped = [c for c in columns if c not in mapping.values()]
-
-    return {
-        "columns": columns,
-        "mapping": mapping,
-        "missing_fields": missing,
-        "unmapped_columns": unmapped
-    }
+        return {
+            "status": "error",
+            "message": str(e),
+            "columns": [],
+            "mapping": {},
+            "missing_fields": [],
+            "unmapped_columns": []
+        }
